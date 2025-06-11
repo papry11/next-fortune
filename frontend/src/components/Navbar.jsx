@@ -1,11 +1,17 @@
-import React, { useState } from "react";
+import React, { useContext, useState } from "react";
 import { assets } from "../assets/assets";
 import { Link, NavLink } from "react-router-dom";
+import { ShopContext } from "../context/ShopContext";
 
 const Navbar = () => {
-  const [visible , setVisible] = useState(false)
+  const [visible, setVisible] = useState(false)
+  
+  const {setShowSearch ,getCartCount } = useContext(ShopContext)
+
+
+
   return (
-    <div className="flex items-center justify-between py-5 font-medium">
+    <div className="flex items-center justify-between py-5 font-medium border-b border-gray-300">
      <Link to='/'> <h1 className="prata-regular text-2xl sm:py-3 lg:text-4xl">INSAF BD</h1></Link>
 
       <ul className="hidden sm:flex gap-5 text-sm text-gray-700">
@@ -28,7 +34,7 @@ const Navbar = () => {
       </ul>
 
       <div className="flex items-center gap-5">
-        <img
+        <img onClick={()=>setShowSearch(true)}
           src={assets.search_icon}
           className="w-5 cursor-pointer"
           alt="search icon"
@@ -36,11 +42,11 @@ const Navbar = () => {
 
         {/* Make this a group for hover effect */}
         <div className="relative group">
-          <img
+          <Link to='/login'><img
             src={assets.profile_icon}
             className="w-5 cursor-pointer"
             alt="profile icon"
-          />
+          /></Link>
 
           {/* Show on hover of parent group */}
           <div className="hidden group-hover:block absolute right-0 pt-4">
@@ -53,7 +59,7 @@ const Navbar = () => {
         </div>
         <Link to='/cart' className="relative">
           <img src={assets.cart_icon} className="w-5 min-w-5" alt="cart icon" />
-          <p className="absolute right-[-5px] bottom-[-5px] w-4 text-center leading-4 bg-black text-white aspect-square rounded-full text-[8px]">10</p>
+          <p className="absolute right-[-5px] bottom-[-5px] w-4 text-center leading-4 bg-black text-white aspect-square rounded-full text-[12px]">{getCartCount()}</p>
         </Link>
         <img onClick={() => setVisible(true)} src={assets.menu_icon} className="w-5 cursor-pointer sm:hidden" alt="menu icon" />
       </div>
