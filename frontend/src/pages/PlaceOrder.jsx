@@ -1,19 +1,94 @@
 import React, { useContext, useState } from "react";
 import Title from "../components/Title";
 import CartTotal from "../components/CartTotal";
-import { assets } from "../assets/assets";
 import { ShopContext } from "../context/ShopContext";
+import axios from "axios";
+import { toast } from "react-toastify";
 
 const PlaceOrder = () => {
+  const {
+    navigate,
+    backendUrl,
+    token,
+    cartItems,
+    setCartItems,
+    getCartAmount,
+    products,
+  } = useContext(ShopContext);
 
-  const [method, setMethod] = useState('cod');
+  const [method, setMethod] = useState("cod");
+  const [shippingCharge, setShippingCharge] = useState(0);
 
+  const [formData, setFormData] = useState({
+    fullName: "",
+    phone: "",
+    fullAddress: "",
+  });
 
-  const { navigate } = useContext(ShopContext);
+  const onChangeHandler = (event) => {
+    const name = event.target.name;
+    const value = event.target.value;
+    setFormData((data) => ({ ...data, [name]: value }));
+  };
+
+  const onSubmitHandler = async (event) => {
+    event.preventDefault();
+    try {
+      let orderItems = [];
+
+      for (const items in cartItems) {
+        for (const item in cartItems[items]) {
+          if (cartItems[items][item] > 0) {
+            const itemInfo = structuredClone(
+              products.find((product) => product._id === items)
+            );
+            if (itemInfo) {
+              itemInfo.size = item;
+              itemInfo.quantity = cartItems[items][item];
+              orderItems.push(itemInfo);
+            }
+          }
+        }
+      }
+
+      let orderData = {
+        address: formData,
+        items: orderItems,
+        shippingCharge: shippingCharge,
+        amount: getCartAmount() + shippingCharge,
+      };
+
+      switch (method) {
+        case "cod":
+          const response = await axios.post(
+            backendUrl + "/api/order/place",
+            orderData,
+            { headers: { token } }
+          );
+          if (response.data.success) {
+            toast.success("অর্ডার সফলভাবে দেওয়া হয়েছে!");
+            setCartItems({});
+            navigate("/orders");
+          } else {
+            toast.error(response.data.message);
+          }
+          break;
+
+        default:
+          break;
+      }
+    } catch (error) {
+      console.error("Order Error:", error.message);
+      toast.error("অর্ডার করার সময় সমস্যা হয়েছে। আবার চেষ্টা করুন।");
+    }
+  };
 
   return (
-    <div className="flex flex-col sm:flex-row justify-between gap-4 pt-5 min-h-[80vh border-t]">
-      {/* left side--------------------------- */}
+    <form
+      onSubmit={onSubmitHandler}
+      className="flex flex-col sm:flex-row justify-between gap-4 pt-5 min-h-[80vh] border-t"
+    >
+      {/* LEFT SIDE */}
       <div className="flex flex-col gap-4 w-full sm:max-w-[480px]">
         <div className="text-xl sm:text-2xl my-3">
           <Title text1={"DELIVERY"} text2={"INFORMATION"} />
@@ -21,67 +96,99 @@ const PlaceOrder = () => {
         <div className="gap-3">
           <label className="mx-2">Name</label>
           <input
+            required
+            onChange={onChangeHandler}
+            name="fullName"
+            value={formData.fullName}
             className="border border-gray-300 rounded py-1.5 px-3.5 w-full m-2"
             type="text"
             placeholder="Enter Your Name"
           />
+
           <label className="mx-2">Phone Number</label>
           <input
+            required
+            onChange={onChangeHandler}
+            name="phone"
+            value={formData.phone}
             className="border border-gray-300 rounded py-1.5 px-3.5 w-full m-2"
             type="number"
             placeholder="Enter Your Number"
           />
+
           <label className="mx-2">Address</label>
           <input
+            required
+            onChange={onChangeHandler}
+            name="fullAddress"
+            value={formData.fullAddress}
             className="border border-gray-300 rounded py-1.5 px-3.5 w-full m-2"
             type="text"
             placeholder="Enter Your Address"
           />
-          <div className="flex flex-col">
-            <label htmlFor="shippingArea" className="mx-2">
-              Shipping Area
-            </label>
-            <select
-              id="shippingArea"
-              name="shippingArea"
-              className="border text-gray-500 border-gray-300 rounded py-1.5 px-3.5 w-full m-2"
-              required
-            >
-              <option value="">Select Delivery Area</option>
-              <option value="Dhaka">Inside Dhaka</option>
-              <option value="Chittagong">Outide Dhaka</option>
-            </select>
+
+          {/* Shipping Charge */}
+          <div className="m-2 border border-gray-300 rounded p-4">
+            <p className="mb-2 font-semibold">Shipping Charge :</p>
+            <div className="flex flex-col sm:flex-row gap-4">
+              <label className="flex items-center gap-2">
+                <input
+                  required
+                  type="radio"
+                  name="shipping"
+                  value="inside"
+                  onChange={() => setShippingCharge(80)}
+                />
+                Inside Dhaka (৳80)
+              </label>
+              <label className="flex items-center gap-2">
+                <input
+                  required
+                  type="radio"
+                  name="shipping"
+                  value="outside"
+                  onChange={() => setShippingCharge(150)}
+                />
+                Outside Dhaka (৳150)
+              </label>
+            </div>
           </div>
         </div>
       </div>
-      {/* right side--------------------------------- */}
+
+      {/* RIGHT SIDE */}
       <div className="mt-8">
         <div className="mt-8 min-w-80">
-          <CartTotal />
+          <CartTotal shippingCharge={shippingCharge} />
         </div>
         <div className="mt-12">
-          <Title text1={'PAYMENT'} text2={'METHOD'} />
-          {/* payment method selection ----------------------------- */}
+          <Title text1={"PAYMENT"} text2={"METHOD"} />
           <div className="flex gap-3 flex-col lg:flex-row">
-            <div onClick={()=>setMethod('stripe')} className="flex items-center gap-3 border border-gray-300 p-2 px-3 cursor-pointer">
-              <p className={`min-w-3.5 h-3.5 border border-gray-300 rounded-full ${method === 'stripe' ? 'bg-green-400' : ''}`}></p>
-              <img className="h-5 mx-4" src={assets.stripe_logo} alt="" />
-            </div>
-            <div onClick={()=>setMethod('razorpay')} className="flex items-center gap-3 border border-gray-300 p-2 px-3 cursor-pointer">
-              <p className={`min-w-3.5 h-3.5 border border-gray-300 rounded-full ${method === 'razorpay' ? 'bg-green-400' : ''}`}></p>
-              <img className="h-5 mx-4" src={assets.razorpay_logo} alt="" />
-            </div>
-            <div onClick={()=>setMethod('cod')} className="flex items-center gap-3 border border-gray-300 p-2 px-3 cursor-pointer">
-              <p className={`min-w-3.5 h-3.5 border border-gray-300 rounded-full ${method === 'cod' ? 'bg-green-400' : ''}`}></p>
-              <p className="text-gray-500 text-sm font-medium mx-4">CASH ON DELIVERY</p>
+            <div
+              onClick={() => setMethod("cod")}
+              className="flex items-center gap-3 border border-gray-300 p-2 px-3 cursor-pointer"
+            >
+              <p
+                className={`min-w-3.5 h-3.5 border border-gray-300 rounded-full ${
+                  method === "cod" ? "bg-green-400" : ""
+                }`}
+              ></p>
+              <p className="text-gray-500 text-sm font-medium mx-4">
+                CASH ON DELIVERY
+              </p>
             </div>
           </div>
-          <div className='w-full text-end'>
-            <button onClick={()=>navigate('/orders')} className='bg-black text-white text-sm my-8 px-8 py-3'>PLACE ORDER</button>
+          <div className="w-full text-end">
+            <button
+              type="submit"
+              className="bg-black text-white text-sm my-8 px-8 py-3"
+            >
+              PLACE ORDER
+            </button>
           </div>
         </div>
       </div>
-    </div>
+    </form>
   );
 };
 

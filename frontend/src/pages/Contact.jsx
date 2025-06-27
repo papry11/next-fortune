@@ -48,7 +48,7 @@ const Contact = () => {
 
           <div>
             <h3 className="text-2xl font-semibold border-b border-gray-300 pb-2 mb-4 max-w-max">
-              Careers at Forever
+              Careers at Insaf Bd
             </h3>
             <p className="mb-6 text-base leading-relaxed">
               Learn more about our teams and job openings. Join us to grow your career.

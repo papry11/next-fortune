@@ -2,8 +2,11 @@ import React, { useContext } from "react";
 import { ShopContext } from "../context/ShopContext";
 import Title from "./Title";
 
-const CartTotal = () => {
-  const { currency, getCartAmount, getDeliveryFee } = useContext(ShopContext);
+const CartTotal = ({ shippingCharge = 0 }) => {
+  const { currency, getCartAmount } = useContext(ShopContext);
+
+  const subtotal = getCartAmount();
+  const total = subtotal + shippingCharge;
 
   return (
     <div className="w-full">
@@ -16,7 +19,7 @@ const CartTotal = () => {
           <p>Product Price</p>
           <p>
             {currency}
-            {getCartAmount()}.00
+            {subtotal.toFixed(2)}
           </p>
         </div>
         <hr />
@@ -24,7 +27,7 @@ const CartTotal = () => {
           <p>Delivery Charge</p>
           <p>
             {currency}
-            {getDeliveryFee()}
+            {shippingCharge}
           </p>
         </div>
         <hr />
@@ -32,7 +35,7 @@ const CartTotal = () => {
           <b>Total </b>
           <b>
             {currency}
-            {getCartAmount() === 0 ? 0 : getCartAmount() + getDeliveryFee()}
+            {subtotal === 0 ? 0 : total.toFixed(2)}
           </b>
         </div>
       </div>

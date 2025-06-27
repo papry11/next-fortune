@@ -1,12 +1,11 @@
+
 import validator from 'validator';
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 import userModel from '../models/userModel.js';
 
 // Token create function
-const createToken = (id) => {
-    return jwt.sign({ id }, process.env.JWT_SECRET, { expiresIn: '7d' });
-};
+const createToken = (id) => jwt.sign({ id }, process.env.JWT_SECRET, { expiresIn: '7d' });
 
 // ===========================
 // Route: User Registration
@@ -38,12 +37,7 @@ const registerUser = async (req, res) => {
         const hashedPassword = await bcrypt.hash(password, salt);
 
         // Save new user
-        const newUser = new userModel({
-            name,
-            email,
-            password: hashedPassword
-        });
-
+        const newUser = new userModel({ name, email, password: hashedPassword });
         const user = await newUser.save();
 
         // Create token
@@ -66,7 +60,7 @@ const loginUser = async (req, res) => {
 
         const user = await userModel.findOne({ email });
         if (!user) {
-            return res.status(400).json({ success: false, message: "Invalid email or password" });
+            return res.status(400).json({ success: false, message: "User doesn't exist" });
         }
 
         const isMatch = await bcrypt.compare(password, user.password);
@@ -84,10 +78,27 @@ const loginUser = async (req, res) => {
 };
 
 // ===========================
-// Route: Admin Login (placeholder)
+// Route: Admin Login
 // ===========================
 const adminLogin = async (req, res) => {
-    res.json({ success: true, message: "Admin login route working (not implemented)" });
+    try {
+        const { email, password } = req.body;
+
+        // Check admin credentials from environment variables
+        if (email === process.env.ADMIN_EMAIL && password === process.env.ADMIN_PASSWORD) {
+            // Create admin token with object payload
+            const token = jwt.sign({ email, role: 'admin' }, process.env.JWT_SECRET, { expiresIn: '7d' });
+
+            return res.json({ success: true, token });
+        } else {
+            return res.status(401).json({ success: false, message: "Invalid admin credentials" });
+        }
+
+    } catch (error) {
+        console.error("Admin Login Error:", error.message);
+        return res.status(500).json({ success: false, message: "Server Error" });
+    }
 };
 
 export { loginUser, registerUser, adminLogin };
+

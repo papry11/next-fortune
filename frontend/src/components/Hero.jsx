@@ -10,7 +10,7 @@ const Hero = () => {
         <div className="text-[#414141]">
           <div className="flex items-center gap-2 px-5">
             <p className="w-8 md:w-11 h-[2px] bg-[#414141] "></p>
-            <p className="text-base lg:text-lg">Hello...!</p>
+            <p className="text-base lg:text-lg">hello...</p>
           </div>
           <h1 className="prata-regular text-2xl sm:py-3 lg:text-5xl leading-relaxed px-5">
             Welcome to Insaf BD
@@ -20,9 +20,10 @@ const Hero = () => {
               to="/collection"
               className='bg-black text-white text-sm lg:text-base px-6 py-2 lg:px-8 lg:py-3 rounded'
             >
-              Show Now
+              Shop Now
             </Link>
           </div>
+          <p className="p-6  font-medium">আমাদের সব পণ্য নিরাপদে ক্যাশ অন ডেলিভারির মাধ্যমে ডেলিভারি  করা হয়। আপনি পণ্য গ্রহণের সময় সেটি যাচাই করে তারপর মূল্য পরিশোধ করতে পারবেন ! </p>
         </div>
       </div>
       {/* hero right side */}

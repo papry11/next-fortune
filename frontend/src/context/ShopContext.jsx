@@ -1,20 +1,22 @@
-import { createContext, useState } from "react";
-import { products } from "../assets/assets";
+import { createContext, useEffect, useState } from "react";
 import { toast } from "react-toastify";
 import { useNavigate } from 'react-router-dom';
+import axios from 'axios';
+
 export const ShopContext = createContext();
 
 const ShopContextProvider = (props) => {
   const currency = '৳';
-  const [userLocation, setUserLocation] = useState('dhaka'); 
+  const delivery_fee = 80;
+  const [userLocation, setUserLocation] = useState('dhaka');
+  const backendUrl = import.meta.env.VITE_BACKEND_URL;
   const [search, setSearch] = useState('');
   const [showSearch, setShowSearch] = useState(false);
-    const [cartItems, setCartItems] = useState({});
-    const navigate = useNavigate();
+  const [cartItems, setCartItems] = useState({});
+  const [products, setProducts] = useState([]);
+  const [token, setToken] = useState('');
+  const navigate = useNavigate();
 
-    
-    
-    
   const addToCart = async (itemId, size) => {
     if (!size) {
       toast.error('সাইজ সিলেক্ট করুন');
@@ -35,6 +37,19 @@ const ShopContextProvider = (props) => {
     }
 
     setCartItems(cartData);
+
+    if (token) {
+      try {
+        await axios.post(
+          backendUrl + '/api/cart/add',
+          { itemId, size },
+          { headers: { token } }
+        );
+      } catch (error) {
+        console.log(error);
+        toast.error(error.message);
+      }
+    }
   };
 
   const getCartCount = () => {
@@ -45,7 +60,10 @@ const ShopContextProvider = (props) => {
           if (cartItems[items][item] > 0) {
             totalCount += cartItems[items][item];
           }
-        } catch (error) {}
+        } catch (error) {
+          console.log(error);
+          toast.error(error.message);
+        }
       }
     }
     return totalCount;
@@ -55,6 +73,18 @@ const ShopContextProvider = (props) => {
     let cartData = structuredClone(cartItems);
     cartData[itemId][size] = quantity;
     setCartItems(cartData);
+    if (token) {
+      try {
+        await axios.post(
+          backendUrl + '/api/cart/update',
+          { itemId, size, quantity },
+          { headers: { token } }
+        );
+      } catch (error) {
+        console.log(error);
+        toast.error(error.message);
+      }
+    }
   };
 
   const getCartAmount = () => {
@@ -68,7 +98,10 @@ const ShopContextProvider = (props) => {
               totalAmount += itemInfo.price * cartItems[items][item];
             }
           }
-        } catch (error) {}
+        } catch (error) {
+          console.log(error);
+          toast.error(error.message);
+        }
       }
     }
     return totalAmount;
@@ -82,9 +115,53 @@ const ShopContextProvider = (props) => {
     }
   };
 
+  const getProductData = async () => {
+    try {
+      const response = await axios.get(backendUrl + '/api/product/list');
+      if (response.data.success) {
+        setProducts(response.data.products);
+      } else {
+        toast.error(response.data.message);
+      }
+    } catch (error) {
+      console.log(error);
+      toast.error(error.message);
+    }
+  };
+
+  const getUserCart = async (userToken) => {
+    try {
+      const response = await axios.post(
+        backendUrl + '/api/cart/get',
+        {},
+        { headers: { token: userToken } }
+      );
+
+      if (response.data.success) {
+        setCartItems(response.data.cartData);
+      }
+    } catch (error) {
+      console.log(error);
+      toast.error(error.message);
+    }
+  };
+
+  useEffect(() => {
+    getProductData();
+  }, []);
+
+  useEffect(() => {
+    const savedToken = localStorage.getItem('token');
+    if (!token && savedToken) {
+      setToken(savedToken);
+      getUserCart(savedToken); 
+    }
+  }, [token]);
+
   const value = {
     products,
     currency,
+    delivery_fee,
     getDeliveryFee,
     userLocation,
     setUserLocation,
@@ -94,10 +171,14 @@ const ShopContextProvider = (props) => {
     setShowSearch,
     cartItems,
     addToCart,
+    setCartItems,
     getCartCount,
     updateQuantity,
     getCartAmount,
-    navigate
+    navigate,
+    backendUrl,
+    token,
+    setToken,
   };
 
   return (
