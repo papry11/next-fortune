@@ -128,7 +128,7 @@ const PlaceOrder = () => {
           />
 
           {/* Shipping Charge */}
-          <div className="m-2 border border-gray-300 rounded p-4">
+          <div className="w-full m-2 border border-gray-300 rounded p-4">
             <p className="mb-2 font-semibold">Shipping Charge :</p>
             <div className="flex flex-col sm:flex-row gap-4">
               <label className="flex items-center gap-2">
@@ -178,10 +178,10 @@ const PlaceOrder = () => {
               </p>
             </div>
           </div>
-          <div className="w-full text-end">
+          <div className="w-full">
             <button
               type="submit"
-              className="bg-black text-white text-sm my-8 px-8 py-3"
+              className="w-full mt-6 relative inline-flex items-center justify-center p-3 mb-2 me-2 overflow-hidden text-base font-semibold text-gray-900 rounded-lg group bg-gradient-to-br from-pink-500 to-orange-400 hover:from-pink-600 hover:to-orange-500 hover:text-white dark:text-white focus:ring-4 focus:outline-none focus:ring-pink-200 dark:focus:ring-pink-800 transition-all duration-300 ease-in-out transform hover:scale-105 cursor-pointer"
             >
               PLACE ORDER
             </button>

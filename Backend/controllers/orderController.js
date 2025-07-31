@@ -36,6 +36,37 @@ const placeOrder = async (req, res) => {
   }
 };
 
+// place order for guest
+
+export const placeGuestOrder = async (req, res) => {
+  try {
+    const { name, email, phone, address, items, amount, paymentMethod } = req.body;
+
+    if (!name || !email || !address || !items || !amount) {
+      return res.status(400).json({ success: false, message: "Missing fields" });
+    }
+
+    let user = await userModel.findOne({ email });
+
+    if (!user) {
+      user = await userModel.create({ name, email, phone });
+    }
+
+    const order = await orderModel.create({
+      user: user._id,
+      items,
+      amount,
+      address,
+      paymentMethod,
+    });
+
+    res.status(201).json({ success: true, message: "Order placed", order });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ success: false, message: "Server error" });
+  }
+};
+
 
 // placing order using Bkash method
 const placeOrderBkash = async (req, res) => {
@@ -61,10 +92,10 @@ const allOrders = async (req, res) => {
 // get orders for a user (frontend)
 const userOrders = async (req, res) => {
   try {
-    const userId = req.userId; 
+    const userId = req.userId;
 
     const orders = await orderModel.find({ userId });
-    res.json({ success: true, data: orders }); 
+    res.json({ success: true, data: orders });
 
   } catch (error) {
     console.error("User Orders Error:", error);
@@ -98,3 +129,4 @@ export {
   userOrders,
   updateStatus
 };
+

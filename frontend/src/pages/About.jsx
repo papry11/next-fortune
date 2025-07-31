@@ -4,51 +4,52 @@ import { assets } from "../assets/assets";
 
 const About = () => {
   return (
-    <div className="max-w-7xl mx-auto px-6 sm:px-12 lg:px-24 py-20">
-      {/* Title Section */}
+    <section className=" text-gray-100 py-20 px-6 sm:px-12 lg:px-24">
+      {/* Title */}
       <div className="text-center text-3xl mb-6">
-        <Title text1={"ABOUT"} text2={"US"} />
+        <Title text1="ABOUT" text2="US" />
+        
       </div>
 
-      {/* Main Content */}
-      <div className="flex flex-col md:flex-row items-center md:items-start gap-12">
-        {/* Left Image */}
-        <div className="md:w-1/2 flex justify-center">
+      {/* Grid Content */}
+      <div className="grid md:grid-cols-2 gap-12 items-center bg-gradient-to-br from-[#161b22] to-[#111827] p-10 rounded-3xl shadow-[0_0_40px_rgba(0,0,0,0.4)] border border-gray-400">
+        
+        {/* Image */}
+        <div className="relative">
+          <div className="absolute -top-5 -left-5 w-full h-full border-2 border-gray-400 rounded-xl z-0" />
           <img
             src={assets.about_img}
-            alt="Clothing, coffee, and phone on a bed"
-            className="rounded-xl shadow-md w-full max-w-md object-cover"
+            alt="About INSAF BD"
+            className="relative z-10 rounded-xl w-full object-cover shadow-lg"
           />
         </div>
 
-        {/* Right Text Content */}
-        <div className="md:w-1/2 text-gray-600 space-y-6 text-sm font-light leading-relaxed">
+        {/* Text */}
+        <div className="space-y-6 text-[15px] font-light leading-[1.8]">
           <p>
-            INSAF BD একটি উদীয়মান অনলাইন ফ্যাশন প্ল্যাটফর্ম, যেখানে আপনি পাবেন
-            মানসম্মত ও ট্রেন্ডি পোশাক সাশ্রয়ী দামে। আমরা বিশ্বাস করি, ফ্যাশন
-            কেবল পোশাক নয় — এটি একজন মানুষের আত্মবিশ্বাস ও ব্যক্তিত্বের প্রকাশ।
-            আমাদের মিশন হলো সহজলভ্য ফ্যাশনের মাধ্যমে সবার জীবনে স্টাইল ও
-            আত্মবিশ্বাস যোগ করা। আমরা ২০২৫ সাল থেকে যাত্রা শুরু করেছি এবং সেই
-            থেকে সৎভাবে ও বিশ্বস্ততার সাথে গ্রাহকদের চাহিদা পূরণ করে যাচ্ছি।
-            আপনার প্রতিটি অর্ডার আমাদের কাছে গুরুত্বপূর্ণ। আমরা প্রতিশ্রুতিবদ্ধ
-            আপনাকে সেরা মানের পণ্য, দ্রুত ডেলিভারি এবং বন্ধুসুলভ কাস্টমার
-            সার্ভিস দিতে।
+            <span className="text-red-400 font-semibold">Next Fortune</span> is a bold new name in online fashion where quality meets affordability. 
+            We believe fashion isn't just about appearance — it's about self-confidence, identity, and lifestyle.
           </p>
 
-          <div>
-            <h3 className="text-lg font-semibold mb-2 border-b border-gray-400 pb-1 max-w-max">
-              আমাদের লক্ষ্য
-            </h3>
-            <p>
-              আমাদের লক্ষ্য হচ্ছে গ্রাহকদের একটি নির্ভরযোগ্য এবং আনন্দদায়ক
-              অনলাইন শপিং অভিজ্ঞতা দেওয়া। আমরা চাই, আপনি যেন সহজে পণ্য খুঁজে
-              পান, ঝামেলামুক্ত অর্ডার করতে পারেন এবং সময়মতো আপনার পছন্দের
-              জিনিসটি হাতে পান।
+          <p>
+            Since launching in <span className="text-red-400 font-semibold">2020</span>, we've been committed to delivering trendy fashion 
+            with honesty, speed, and care. Your trust means everything to us, and every order is treated like the first.
+          </p>
+
+          <p>
+            With fast delivery, responsive support, and handpicked collections, NEXT FORTUNE is not just a shop — it's your style partner.
+          </p>
+
+          <div className="pt-4 border-t border-red-400">
+            <h3 className="text-lg font-semibold text-white mb-2">Our Goal</h3>
+            <p className="text-gray-300">
+              To provide a reliable, stylish, and smooth online shopping experience for everyone.
+              We ensure you discover your fashion favorites effortlessly and receive them right on time — every time.
             </p>
           </div>
         </div>
       </div>
-    </div>
+    </section>
   );
 };
 

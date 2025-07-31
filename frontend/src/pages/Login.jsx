@@ -66,10 +66,10 @@ const Login = () => {
 
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
+    <div className="min-h-screen flex items-center justify-center  px-4">
       <form
         onSubmit={onSubmitHandler}
-        className="w-full max-w-md bg-white rounded-2xl shadow-lg p-8 space-y-8"
+        className="border border-gray-400 w-full max-w-md bg-[#0d1117] rounded-2xl shadow-lg p-8 space-y-8"
       >
         {/* Title */}
         <div className="text-center text-3xl font-semibold ">
@@ -80,13 +80,13 @@ const Login = () => {
         </div>
 
         {/* Inputs */}
-        <div className="space-y-4 text-gray-800">
+        <div className="space-y-4 text-gray-200">
           {currentState !== 'Login' && (
             <input
               onChange={(e) => setName(e.target.value)}
               value={name}
               type="text"
-              className="w-full px-3 py-2 border border-gray-800 rounded focus:outline-none focus:ring-2 focus:ring-gray-800 placeholder:text-gray-800"
+              className="w-full px-3 py-2 border border-gray-200 rounded focus:outline-none focus:ring-2 focus:ring-gray-200 placeholder:text-gray-200/50"
               placeholder="Your Name"
               required
             />
@@ -95,7 +95,7 @@ const Login = () => {
             onChange={(e) => setEmail(e.target.value)}
             value={email}
             type="email"
-            className="w-full px-3 py-2 border border-gray-800 rounded focus:outline-none focus:ring-2 focus:ring-gray-800 placeholder:text-gray-800"
+           className="w-full px-3 py-2 border border-gray-200 rounded focus:outline-none focus:ring-2 focus:ring-gray-200 placeholder:text-gray-200/50"
             placeholder="Email"
             required
           />
@@ -103,31 +103,32 @@ const Login = () => {
             onChange={(e) => setPassword(e.target.value)}
             value={password}
             type="password"
-            className="w-full px-3 py-2 border border-gray-800 rounded focus:outline-none focus:ring-2 focus:ring-gray-800 placeholder:text-gray-800"
+           className="w-full px-3 py-2 border border-gray-200 rounded focus:outline-none focus:ring-2 focus:ring-gray-200 placeholder:text-gray-200/50"
             placeholder="Password"
             required
           />
         </div>
 
         {/* Forgot password */}
-        <div className="flex justify-between text-sm text-gray-800">
+        <div className="flex justify-between text-sm text-gray-200">
           <p className="cursor-pointer hover:underline">Forgot your password?</p>
         </div>
 
         {/* Submit button */}
-        <button
-          type="submit"
-          className="w-full bg-gray-800 text-white py-2 rounded hover:bg-gray-700 transition"
-        >
-          {currentState}
-        </button>
+          <button
+              type="submit"
+              className=" w-full mt-2 relative inline-flex items-center justify-center p-2 mb-2 me-2 overflow-hidden text-lg font-medium text-gray-900 rounded-lg group bg-gradient-to-br from-pink-500 to-orange-400 group-hover:from-pink-500 group-hover:to-orange-400 hover:text-white dark:text-white focus:ring-4 focus:outline-none focus:ring-pink-200 dark:focus:ring-pink-800"
+            >
+              {currentState}
+            
+            </button>
 
         {/* Toggle link */}
         <p
           onClick={() =>
             setCurrentState(currentState === 'Login' ? 'Sign Up' : 'Login')
           }
-          className="cursor-pointer text-center text-gray-800 mt-4 hover:underline"
+          className="cursor-pointer text-center text-gray-100/60 mt-4 hover:underline"
         >
           {currentState === 'Login'
             ? 'Create an account? Click here'

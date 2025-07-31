@@ -19,9 +19,12 @@ const ShopContextProvider = (props) => {
 
   const addToCart = async (itemId, size) => {
     if (!size) {
-      toast.error('সাইজ সিলেক্ট করুন');
+      toast.error('Please select size');
       return;
+    } else {
+      toast.success('Added to cart');
     }
+    
 
     let cartData = structuredClone(cartItems);
 

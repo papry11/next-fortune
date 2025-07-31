@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useContext } from "react";
 import { useParams } from "react-router-dom";
 import { ShopContext } from "../context/ShopContext";
+import { Link } from "react-router-dom";
 import RelatedProducts from "../components/RelatedProducts";
 
 const Product = () => {
@@ -47,7 +48,7 @@ const Product = () => {
             {currency}
             {productData.price}
           </p>
-          <p className="mt-5 text-gray-500 md:w-4/5">
+          <p className="mt-5 text-gray-300 md:w-4/5">
             {productData.description}
           </p>
 
@@ -61,8 +62,8 @@ const Product = () => {
                   className={`py-2 px-4 rounded border transition 
                     ${
                       item === size
-                        ? "border-orange-500 bg-orange-100 text-orange-600"
-                        : "border-gray-300 bg-white"
+                        ? "border-red-400 bg-white text-red-500"
+                        : "border-gray-200/40 bg-black"
                     }`}
                 >
                   {item}
@@ -70,11 +71,19 @@ const Product = () => {
               ))}
             </div>
           </div>
-          <button onClick={()=>addToCart(productData._id,size)} className="bg-black text-white px-8 py-3 text-sm active:bg-gray-700">
-            ADD TO CART
+           <button onClick={()=>addToCart(productData._id,size)} class="relative inline-flex items-center justify-center p-0.5 mb-2 me-2 overflow-hidden text-sm font-medium text-gray-900 rounded-lg group bg-gradient-to-br from-pink-500 to-orange-400 group-hover:from-pink-500 group-hover:to-orange-400 hover:text-white dark:text-white focus:ring-4 focus:outline-none focus:ring-pink-200 dark:focus:ring-pink-800">
+              <span class="relative px-5 py-2.5 transition-all ease-in duration-75 bg-white dark:bg-gray-900 rounded-md group-hover:bg-transparent group-hover:dark:bg-transparent">
+                ADD TO CART
+              </span>
           </button>
+           <Link to='/cart'
+            class="relative inline-flex items-center justify-center p-0.5 mb-2 me-2 overflow-hidden text-sm font-medium text-gray-900 rounded-lg group bg-gradient-to-br from-pink-500 to-orange-400 group-hover:from-pink-500 group-hover:to-orange-400 hover:text-white dark:text-white focus:ring-4 focus:outline-none focus:ring-pink-200 dark:focus:ring-pink-800">
+              <span class="relative px-5 py-2.5 transition-all ease-in duration-75 bg-white dark:bg-gray-900 rounded-md group-hover:bg-transparent group-hover:dark:bg-transparent">
+                GO TO CART
+              </span>
+            </Link>
           <hr className="mt-8 sm:w-4/5 text-gray-300 " />
-          <div className="text-sm text-gray-500 mt-5 flex flex-col gap-1">
+          <div className="text-sm text-gray-200 mt-5 flex flex-col gap-1">
             <p>100% Original product.</p>
             <p>Cash on delivery is available on this product.</p>
             <p>Easy return and exchange policy within 7 days.</p>

@@ -1,5 +1,5 @@
 import express from 'express'
-import { placeOrder, placeOrderBkash, allOrders, userOrders, updateStatus } from '../controllers/orderController.js'
+import { placeOrder, placeGuestOrder, placeOrderBkash, allOrders, userOrders, updateStatus , } from '../controllers/orderController.js'
 import adminAuth from '../middleware/adminAuth.js'
 import authUser from '../middleware/auth.js'
 
@@ -13,8 +13,13 @@ orderRouter.post('/status', adminAuth, updateStatus)
 
 //  payment features
 
-orderRouter.post('/place', authUser, placeOrder)
+orderRouter.post('/place',authUser, placeOrder)
 orderRouter.post('/bkash', authUser, placeOrderBkash)
+
+// guest features
+
+orderRouter.post("/place-guest", placeGuestOrder);
+
 
 // User Feature
 
