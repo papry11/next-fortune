@@ -1,20 +1,73 @@
-import orderModel from '../models/orderModel.js';
-import userModel from '../models/userModel.js';
+import Order from '../models/orderModel.js';
+import User from '../models/userModel.js';
+import GuestUser from '../models/guestModel.js'; // ✅ Corrected model name
+import { v4 as uuidv4 } from "uuid";
 
-// placing order using COD method
+// ✅ Place Guest Order
+const placeGuestOrder = async (req, res) => {
+  try {
+    const { name, email, phone, address, items, amount } = req.body;
+
+    // Create guest user
+    const guestUser = new GuestUser({ name, email, phone, address });
+    await guestUser.save();
+
+    const trackingId = uuidv4();
+
+    // Create order
+    const order = new Order({
+      user: guestUser._id,
+      userType: "GuestUser",
+      items,
+      address,
+      amount,
+      trackingId
+    });
+
+    await order.save();
+
+    res.status(201).json({
+      success: true,
+      message: "Order placed successfully",
+      trackingId
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+};
+
+// ✅ Track Guest Order
+const trackOrder = async (req, res) => {
+  try {
+    const { trackingId } = req.params;
+
+    const order = await Order.findOne({ trackingId }).populate("user");
+
+    if (!order) {
+      return res.status(404).json({ success: false, message: "Order not found" });
+    }
+
+    res.status(200).json({ success: true, order });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+};
+
+// ✅ Place Authenticated User Order
 const placeOrder = async (req, res) => {
   try {
     const { items, address, amount } = req.body;
 
-    // Get userId from auth middleware (set as req.userId)
-    const userId = req.userId;
-
-    if (!userId) {
-      return res.status(401).json({ success: false, message: "Unauthorized" });
+    // Check if order items exist
+    if (!items || !Array.isArray(items) || items.length === 0) {
+      return res.status(400).json({ success: false, message: "No items in the order" });
     }
 
+    const userId = req.userId || null;
+
     const orderData = {
-      userId,
+      user: userId,
+      userType: userId ? "User" : "GuestUser",
       items,
       address,
       amount,
@@ -23,110 +76,68 @@ const placeOrder = async (req, res) => {
       date: Date.now(),
     };
 
-    const newOrder = new orderModel(orderData);
+    const newOrder = new Order(orderData);
     await newOrder.save();
 
-    // Clear cart after successful order
-    await userModel.findByIdAndUpdate(userId, { cartData: {} });
+    // Clear cart for logged-in user
+    if (userId) {
+      await User.findByIdAndUpdate(userId, { cartData: {} });
+    }
 
-    res.json({ success: true, message: "Order Placed" });
+    res.status(201).json({ success: true, message: "Order Placed Successfully" });
   } catch (error) {
     console.error("Place Order Error:", error);
-    res.status(500).json({ success: false, message: error.message });
+    res.status(500).json({ success: false, message: "Server Error", error: error.message });
   }
 };
 
-// place order for guest
-
-export const placeGuestOrder = async (req, res) => {
-  try {
-    const { name, email, phone, address, items, amount, paymentMethod } = req.body;
-
-    if (!name || !email || !address || !items || !amount) {
-      return res.status(400).json({ success: false, message: "Missing fields" });
-    }
-
-    let user = await userModel.findOne({ email });
-
-    if (!user) {
-      user = await userModel.create({ name, email, phone });
-    }
-
-    const order = await orderModel.create({
-      user: user._id,
-      items,
-      amount,
-      address,
-      paymentMethod,
-    });
-
-    res.status(201).json({ success: true, message: "Order placed", order });
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ success: false, message: "Server error" });
-  }
-};
-
-
-// placing order using Bkash method
+// ⛔ Placeholder for Bkash (You can complete later)
 const placeOrderBkash = async (req, res) => {
-
-
-
+  res.status(501).json({ success: false, message: "Bkash payment not implemented yet" });
 };
 
-//  get all orders data for admin panel
+// ✅ Get all orders (Admin)
 const allOrders = async (req, res) => {
-  
   try {
-    const orders = await orderModel.find({})
-    res.json({success:true,orders})
+    const orders = await Order.find({});
+    res.json({ success: true, orders });
   } catch (error) {
-     console.error("User Orders Error:", error);
+    console.error("All Orders Error:", error);
     res.status(500).json({ success: false, message: error.message });
   }
-
-
 };
 
-// get orders for a user (frontend)
+// ✅ Get orders for logged-in user
 const userOrders = async (req, res) => {
   try {
     const userId = req.userId;
 
-    const orders = await orderModel.find({ userId });
+    const orders = await Order.find({ user: userId });
     res.json({ success: true, data: orders });
-
   } catch (error) {
     console.error("User Orders Error:", error);
     res.status(500).json({ success: false, message: error.message });
   }
 };
 
-
-// update order status for admin panel
+// ✅ Update order status (Admin)
 const updateStatus = async (req, res) => {
   try {
-    const { orderId, status } = req.body
-    await orderModel.findByIdAndUpdate(orderId, { status })
-    res.json({ success: true, message: 'Status Updates' })
-    
-    
+    const { orderId, status } = req.body;
+    await Order.findByIdAndUpdate(orderId, { status });
+    res.json({ success: true, message: 'Status Updated' });
   } catch (error) {
-    console.error("User Orders Error:", error);
+    console.error("Update Status Error:", error);
     res.status(500).json({ success: false, message: error.message });
   }
-
-
 };
 
-
-
 export {
+  placeGuestOrder,
+  trackOrder,
   placeOrder,
   placeOrderBkash,
   allOrders,
   userOrders,
   updateStatus
 };
-

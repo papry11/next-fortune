@@ -1,103 +1,73 @@
-import React, { useContext, useState } from "react";
+import React, { useState, useEffect } from "react";
+import axios from "axios";
 import Title from "../components/Title";
 import CartTotal from "../components/CartTotal";
-import { ShopContext } from "../context/ShopContext";
-import axios from "axios";
-import { toast } from "react-toastify";
 
-const PlaceOrder = () => {
-  const {
-    navigate,
-    backendUrl,
-    token,
-    cartItems,
-    setCartItems,
-    getCartAmount,
-    products,
-  } = useContext(ShopContext);
 
-  const [method, setMethod] = useState("cod");
-  const [shippingCharge, setShippingCharge] = useState(0);
-
+const GuestCheckout = () => {
   const [formData, setFormData] = useState({
-    fullName: "",
+    name: "",
+    email: "",
     phone: "",
-    fullAddress: "",
+    address: "",
   });
 
-  const onChangeHandler = (event) => {
-    const name = event.target.name;
-    const value = event.target.value;
-    setFormData((data) => ({ ...data, [name]: value }));
+  
+    const [method, setMethod] = useState("cod");
+    const [shippingCharge, setShippingCharge] = useState(0);
+
+  const [cartItems, setCartItems] = useState(JSON.parse(localStorage.getItem("cart")) || []);
+  const [total, setTotal] = useState(0);
+
+  useEffect(() => {
+    const sum = cartItems.reduce((acc, item) => acc + item.price * item.quantity, 0);
+    setTotal(sum);
+  }, [cartItems]);
+
+  const handleChange = (e) => {
+    setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  const onSubmitHandler = async (event) => {
-    event.preventDefault();
+  const handleOrder = async (e) => {
+    e.preventDefault();
     try {
-      let orderItems = [];
+      const res = await axios.post("http://localhost:4000/api/order/place-guest", {
+        ...formData,
+        items: cartItems,
+        amount: total,
+      });
 
-      for (const items in cartItems) {
-        for (const item in cartItems[items]) {
-          if (cartItems[items][item] > 0) {
-            const itemInfo = structuredClone(
-              products.find((product) => product._id === items)
-            );
-            if (itemInfo) {
-              itemInfo.size = item;
-              itemInfo.quantity = cartItems[items][item];
-              orderItems.push(itemInfo);
-            }
-          }
-        }
-      }
-
-      let orderData = {
-        address: formData,
-        items: orderItems,
-        shippingCharge: shippingCharge,
-        amount: getCartAmount() + shippingCharge,
-      };
-
-      switch (method) {
-        case "cod":
-          const response = await axios.post(
-            backendUrl + "/api/order/place",
-            orderData,
-            { headers: { token } }
-          );
-          if (response.data.success) {
-            toast.success("অর্ডার সফলভাবে দেওয়া হয়েছে!");
-            setCartItems({});
-            navigate("/orders");
-          } else {
-            toast.error(response.data.message);
-          }
-          break;
-
-        default:
-          break;
-      }
-    } catch (error) {
-      console.error("Order Error:", error.message);
-      toast.error("অর্ডার করার সময় সমস্যা হয়েছে। আবার চেষ্টা করুন।");
+      localStorage.removeItem("cart");
+      alert(`Order placed! Track your order with ID: ${res.data.trackingId}`);
+    } catch (err) {
+      console.error(err);
+      alert("Order failed");
     }
   };
 
   return (
+    // <form onSubmit={handleOrder}>
+    //   <h2>Guest Checkout</h2>
+    //   <input name="name" placeholder="Name" onChange={handleChange} required />
+    //   <input name="email" placeholder="Email" onChange={handleChange} required />
+    //   <input name="phone" placeholder="Phone" onChange={handleChange} required />
+    //   <input name="address" placeholder="Address" onChange={handleChange} required />
+    //   <button type="submit">Place Order</button>
+    // </form>
     <form
-      onSubmit={onSubmitHandler}
+      onSubmit={handleOrder}
       className="flex flex-col sm:flex-row justify-between gap-4 pt-5 min-h-[80vh] border-t"
     >
       {/* LEFT SIDE */}
       <div className="flex flex-col gap-4 w-full sm:max-w-[480px]">
         <div className="text-xl sm:text-2xl my-3">
-          <Title text1={"DELIVERY"} text2={"INFORMATION"} />
+          <Title text1={"GUEST"} text2={"CHECKOUT"} />
         </div>
         <div className="gap-3">
           <label className="mx-2">Name</label>
           <input
             required
-            onChange={onChangeHandler}
+            onChange={handleChange}
             name="fullName"
             value={formData.fullName}
             className="border border-gray-300 rounded py-1.5 px-3.5 w-full m-2"
@@ -108,7 +78,7 @@ const PlaceOrder = () => {
           <label className="mx-2">Phone Number</label>
           <input
             required
-            onChange={onChangeHandler}
+            onChange={handleChange}
             name="phone"
             value={formData.phone}
             className="border border-gray-300 rounded py-1.5 px-3.5 w-full m-2"
@@ -119,7 +89,7 @@ const PlaceOrder = () => {
           <label className="mx-2">Address</label>
           <input
             required
-            onChange={onChangeHandler}
+            onChange={handleChange}
             name="fullAddress"
             value={formData.fullAddress}
             className="border border-gray-300 rounded py-1.5 px-3.5 w-full m-2"
@@ -189,7 +159,8 @@ const PlaceOrder = () => {
         </div>
       </div>
     </form>
+
   );
 };
 
-export default PlaceOrder;
+export default GuestCheckout;
