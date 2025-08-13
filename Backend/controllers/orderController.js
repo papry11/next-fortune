@@ -6,33 +6,47 @@ import { v4 as uuidv4 } from "uuid";
 // ✅ Place Guest Order
 const placeGuestOrder = async (req, res) => {
   try {
-    const { name, email, phone, address, items, amount } = req.body;
+    const { fullName, phone, fullAddress, items, amount } = req.body;
 
-    // Create guest user
-    const guestUser = new GuestUser({ name, email, phone, address });
-    await guestUser.save();
+    if (!fullName || !phone || !fullAddress || !items || !amount) {
+      return res.status(400).json({ success: false, message: "All fields are required" });
+    }
+
+    // Backend এ product price আবার গণনা করো
+    const totalProductPrice = items.reduce(
+      (sum, item) => sum + (item.price * item.quantity),
+      0
+    );
+
+    // delivery charge বের করো
+    const deliveryCharge = amount - totalProductPrice;
+
+    // ফাইনাল এমাউন্ট হিসাব
+    const finalAmount = totalProductPrice + deliveryCharge;
+
+    // Guest user তৈরি
+    const guestUser = await GuestUser.create({ fullName, phone, fullAddress });
 
     const trackingId = uuidv4();
 
-    // Create order
-    const order = new Order({
+    // Order তৈরি
+    const order = await Order.create({
       user: guestUser._id,
       userType: "GuestUser",
       items,
-      address,
-      amount,
+      address: {
+        fullName,
+        phone,
+        fullAddress
+      },
+      amount: finalAmount,
       trackingId
     });
 
-    await order.save();
-
-    res.status(201).json({
-      success: true,
-      message: "Order placed successfully",
-      trackingId
-    });
+    res.status(201).json({ success: true, trackingId });
   } catch (error) {
-    res.status(500).json({ success: false, error: error.message });
+    console.error("Guest Order Error:", error.message);
+    res.status(500).json({ success: false, message: "Server Error" });
   }
 };
 

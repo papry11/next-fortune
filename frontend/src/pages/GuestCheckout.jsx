@@ -1,26 +1,32 @@
-import React, { useState, useEffect } from "react";
+
+import React, { useState, useEffect, useContext } from "react";
 import axios from "axios";
 import Title from "../components/Title";
 import CartTotal from "../components/CartTotal";
-
+import { ShopContext } from "../context/ShopContext";
 
 const GuestCheckout = () => {
+  const { setCartItems: setContextCartItems } = useContext(ShopContext);
+
   const [formData, setFormData] = useState({
-    name: "",
-    email: "",
+    fullName: "",
     phone: "",
-    address: "",
+    fullAddress: "",
   });
 
-  
-    const [method, setMethod] = useState("cod");
-    const [shippingCharge, setShippingCharge] = useState(0);
+  const [method, setMethod] = useState("cod");
+  const [shippingCharge, setShippingCharge] = useState(0);
 
-  const [cartItems, setCartItems] = useState(JSON.parse(localStorage.getItem("cart")) || []);
+  const [cartItems, setCartItems] = useState(
+    JSON.parse(localStorage.getItem("cart")) || []
+  );
   const [total, setTotal] = useState(0);
 
   useEffect(() => {
-    const sum = cartItems.reduce((acc, item) => acc + item.price * item.quantity, 0);
+    const sum = cartItems.reduce(
+      (acc, item) => acc + item.price * item.quantity,
+      0
+    );
     setTotal(sum);
   }, [cartItems]);
 
@@ -31,29 +37,35 @@ const GuestCheckout = () => {
   const handleOrder = async (e) => {
     e.preventDefault();
     try {
-      const res = await axios.post("http://localhost:4000/api/order/place-guest", {
-        ...formData,
-        items: cartItems,
-        amount: total,
-      });
+      const res = await axios.post(
+        "http://localhost:4000/api/order/place-guest",
+        {
+          fullName: formData.fullName,
+          phone: formData.phone,
+          fullAddress: formData.fullAddress,
+          items: cartItems,
+          amount: total + shippingCharge,
+        }
+      );
 
+      // ✅ LocalStorage থেকে clear
       localStorage.removeItem("cart");
-      alert(`Order placed! Track your order with ID: ${res.data.trackingId}`);
+
+      // ✅ Local state থেকে clear
+      setCartItems([]);
+
+      // ✅ Context থেকেও clear
+      setContextCartItems({});
+
+      alert(`✅ অর্ডার সম্পন্ন হয়েছে! Tracking ID: ${res.data.trackingId}`);
     } catch (err) {
-      console.error(err);
-      alert("Order failed");
+      console.error("Order Failed:", err);
+      alert("❌ অর্ডার ফেইল করেছে। আবার চেষ্টা করুন।");
     }
   };
 
+
   return (
-    // <form onSubmit={handleOrder}>
-    //   <h2>Guest Checkout</h2>
-    //   <input name="name" placeholder="Name" onChange={handleChange} required />
-    //   <input name="email" placeholder="Email" onChange={handleChange} required />
-    //   <input name="phone" placeholder="Phone" onChange={handleChange} required />
-    //   <input name="address" placeholder="Address" onChange={handleChange} required />
-    //   <button type="submit">Place Order</button>
-    // </form>
     <form
       onSubmit={handleOrder}
       className="flex flex-col sm:flex-row justify-between gap-4 pt-5 min-h-[80vh] border-t"
@@ -82,7 +94,7 @@ const GuestCheckout = () => {
             name="phone"
             value={formData.phone}
             className="border border-gray-300 rounded py-1.5 px-3.5 w-full m-2"
-            type="number"
+            type="tel"
             placeholder="Enter Your Number"
           />
 
@@ -159,8 +171,8 @@ const GuestCheckout = () => {
         </div>
       </div>
     </form>
-
   );
 };
 
 export default GuestCheckout;
+
