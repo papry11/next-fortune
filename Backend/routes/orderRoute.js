@@ -1,5 +1,5 @@
 import express from 'express'
-import {  placeGuestOrder, trackOrder, placeOrder,  placeOrderBkash, allOrders, userOrders, updateStatus , } from '../controllers/orderController.js'
+import {  placeGuestOrder, trackOrder, placeOrder, allOrders, userOrders, updateStatus , } from '../controllers/orderController.js'
 import adminAuth from '../middleware/adminAuth.js'
 import authUser from '../middleware/auth.js'
 
@@ -20,7 +20,7 @@ orderRouter.get("/track/:trackingId", trackOrder);
 //  payment features
 
 orderRouter.post('/place',authUser, placeOrder)
-orderRouter.post('/bkash', authUser, placeOrderBkash)
+
 
 // User Feature
 

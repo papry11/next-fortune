@@ -141,6 +141,16 @@ const PlaceOrder = () => {
                 />
                 Inside Dhaka (৳80)
               </label>
+               <label className="flex items-center gap-2">
+                <input
+                  required
+                  type="radio"
+                  name="shipping"
+                  value="sub-dhaka"
+                  onChange={() => setShippingCharge(100)}
+                />
+                Sub Dhaka (৳100)
+              </label>
               <label className="flex items-center gap-2">
                 <input
                   required

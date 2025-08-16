@@ -1,6 +1,8 @@
+
 import Order from '../models/orderModel.js';
 import User from '../models/userModel.js';
-import GuestUser from '../models/guestModel.js'; // ✅ Corrected model name
+import Product from "../models/productModels.js";
+import GuestUser from '../models/guestModel.js';
 import { v4 as uuidv4 } from "uuid";
 
 // ✅ Place Guest Order
@@ -12,36 +14,53 @@ const placeGuestOrder = async (req, res) => {
       return res.status(400).json({ success: false, message: "All fields are required" });
     }
 
-    // Backend এ product price আবার গণনা করো
+    // Calculate total
     const totalProductPrice = items.reduce(
       (sum, item) => sum + (item.price * item.quantity),
       0
     );
 
-    // delivery charge বের করো
     const deliveryCharge = amount - totalProductPrice;
-
-    // ফাইনাল এমাউন্ট হিসাব
     const finalAmount = totalProductPrice + deliveryCharge;
 
-    // Guest user তৈরি
+    // Create Guest User
     const guestUser = await GuestUser.create({ fullName, phone, fullAddress });
 
     const trackingId = uuidv4();
 
-    // Order তৈরি
+    // ✅ Map items with product image also
+    const orderItems = await Promise.all(
+  items.map(async (item) => {
+    const product = await Product.findById(item.productId).select("image name price");
+
+    return {
+      product: item.productId,
+      name: product ? product.name : item.name,
+      price: product ? product.price : item.price,
+      quantity: item.quantity,
+      size: item.size,
+      image: product ? product.image[0] : null   // ✅ ensure image saved
+    };
+  })
+);
+
+    // Create Order
     const order = await Order.create({
       user: guestUser._id,
       userType: "GuestUser",
-      items,
+      items: orderItems,
       address: {
         fullName,
         phone,
-        fullAddress
+        fullAddress,
       },
       amount: finalAmount,
-      trackingId
+      trackingId,
+      paymentMethod: "COD",
+      payment: false,
     });
+
+    
 
     res.status(201).json({ success: true, trackingId });
   } catch (error) {
@@ -50,12 +69,69 @@ const placeGuestOrder = async (req, res) => {
   }
 };
 
+
+
+//✅ Place Guest Order
+// const placeGuestOrder = async (req, res) => {
+//   try {
+//     const { fullName, phone, fullAddress, items, amount } = req.body;
+
+//     if (!fullName || !phone || !fullAddress || !items || !amount) {
+//       return res.status(400).json({ success: false, message: "All fields are required" });
+//     }
+
+//     // Calculate total
+//     const totalProductPrice = items.reduce(
+//       (sum, item) => sum + (item.price * item.quantity),
+//       0
+//     );
+
+//     const deliveryCharge = amount - totalProductPrice;
+//     const finalAmount = totalProductPrice + deliveryCharge;
+
+//     // Create Guest User
+//     const guestUser = await GuestUser.create({ fullName, phone, fullAddress });
+
+//     const trackingId = uuidv4();
+
+//     // ✅ Map items to include ObjectId & size
+//     const orderItems = items.map(item => ({
+//       product: item.productId,
+//       name: item.name,
+//       price: item.price,
+//       quantity: item.quantity,
+//       size: item.size
+//     }));
+
+//     // Create Order
+//     const order = await Order.create({
+//       user: guestUser._id,
+//       userType: "GuestUser",
+//       items: orderItems,
+//       address: {
+//         fullName,
+//         phone,
+//         fullAddress
+//       },
+//       amount: finalAmount,
+//       trackingId
+//     });
+
+//     res.status(201).json({ success: true, trackingId });
+//   } catch (error) {
+//     console.error("Guest Order Error:", error.message);
+//     res.status(500).json({ success: false, message: "Server Error" });
+//   }
+// };
+
 // ✅ Track Guest Order
 const trackOrder = async (req, res) => {
   try {
     const { trackingId } = req.params;
 
-    const order = await Order.findOne({ trackingId }).populate("user");
+    const order = await Order.findOne({ trackingId })
+      .populate("user")
+      .populate("items.product", "name price image size");
 
     if (!order) {
       return res.status(404).json({ success: false, message: "Order not found" });
@@ -72,28 +148,33 @@ const placeOrder = async (req, res) => {
   try {
     const { items, address, amount } = req.body;
 
-    // Check if order items exist
     if (!items || !Array.isArray(items) || items.length === 0) {
       return res.status(400).json({ success: false, message: "No items in the order" });
     }
 
     const userId = req.userId || null;
 
+    const orderItems = items.map(item => ({
+      product: item.productId,
+      name: item.name,
+      price: item.price,
+      quantity: item.quantity,
+      size: item.size
+    }));
+
     const orderData = {
       user: userId,
       userType: userId ? "User" : "GuestUser",
-      items,
+      items: orderItems,
       address,
       amount,
       paymentMethod: "COD",
-      payment: false,
-      date: Date.now(),
+      payment: false
     };
 
     const newOrder = new Order(orderData);
     await newOrder.save();
 
-    // Clear cart for logged-in user
     if (userId) {
       await User.findByIdAndUpdate(userId, { cartData: {} });
     }
@@ -105,15 +186,13 @@ const placeOrder = async (req, res) => {
   }
 };
 
-// ⛔ Placeholder for Bkash (You can complete later)
-const placeOrderBkash = async (req, res) => {
-  res.status(501).json({ success: false, message: "Bkash payment not implemented yet" });
-};
-
 // ✅ Get all orders (Admin)
 const allOrders = async (req, res) => {
   try {
-    const orders = await Order.find({});
+    const orders = await Order.find({})
+      .populate("user")
+      .populate("items.product", "name price image size");
+
     res.json({ success: true, orders });
   } catch (error) {
     console.error("All Orders Error:", error);
@@ -126,7 +205,9 @@ const userOrders = async (req, res) => {
   try {
     const userId = req.userId;
 
-    const orders = await Order.find({ user: userId });
+    const orders = await Order.find({ user: userId })
+      .populate("items.product", "name price image size");
+
     res.json({ success: true, data: orders });
   } catch (error) {
     console.error("User Orders Error:", error);
@@ -150,7 +231,6 @@ export {
   placeGuestOrder,
   trackOrder,
   placeOrder,
-  placeOrderBkash,
   allOrders,
   userOrders,
   updateStatus

@@ -110,13 +110,26 @@ const ShopContextProvider = (props) => {
     return totalAmount;
   };
 
+  // const getDeliveryFee = () => {
+  //   if (userLocation.toLowerCase() === 'dhaka') {
+  //     return 80;
+  //   } else {
+  //     return 150;
+  //   }
+  // };
+
   const getDeliveryFee = () => {
-    if (userLocation.toLowerCase() === 'dhaka') {
-      return 80;
-    } else {
-      return 150;
-    }
-  };
+  if (userLocation.toLowerCase() === 'dhaka') {
+    return 80;
+  } else if (userLocation.toLowerCase() === 'sub-dhaka') {
+    return 120;
+  } else if (userLocation.toLowerCase() === 'outside-dhaka') {
+    return 150;
+  } else {
+    return 150; // fallback
+  }
+};
+
 
   const getProductData = async () => {
     try {
