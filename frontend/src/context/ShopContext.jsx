@@ -40,6 +40,9 @@ const ShopContextProvider = (props) => {
     }
 
     setCartItems(cartData);
+localStorage.setItem("cart", JSON.stringify(cartData));
+console.log("📦 Saved in localStorage:", localStorage.getItem("cart"));
+
 
     if (token) {
       try {
@@ -173,6 +176,15 @@ const ShopContextProvider = (props) => {
       getUserCart(savedToken); 
     }
   }, [token]);
+
+  useEffect(() => {
+  const savedCart = localStorage.getItem("cart");
+  if (savedCart) {
+    setCartItems(JSON.parse(savedCart));
+    console.log("🛒 Cart loaded from localStorage:", JSON.parse(savedCart));
+  }
+}, []);
+
 
   const value = {
     products,

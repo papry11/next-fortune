@@ -48,6 +48,13 @@ const Orders = ({ token }) => {
     fetchAllOrders();
   }, [token]);
 
+  useEffect(() => {
+  if (orders.length > 0) {
+    console.log("Orders Data 👉", orders);
+  }
+}, [orders]);
+
+
   return (
     <div className="bg-gray-50 min-h-screen py-10 px-4 sm:px-8 md:px-12 lg:px-24">
       <h2 className="text-3xl sm:text-4xl font-bold text-gray-800 mb-10 text-center">
@@ -72,7 +79,7 @@ const Orders = ({ token }) => {
             </div>
 
             {/* Items */}
-            <div className="text-sm text-gray-700 space-y-2 border-t pt-3">
+            {/* <div className="text-sm text-gray-700 space-y-2 border-t pt-3">
               {order.items.map((item, i) => (
                 <div key={i} className="flex items-center gap-3">
                   <img
@@ -87,7 +94,36 @@ const Orders = ({ token }) => {
                   </p>
                 </div>
               ))}
-            </div>
+              
+            </div> */}
+
+{/* Items */}
+<div className="text-sm text-gray-700 space-y-2 border-t pt-3">
+  {order.items.map((item, i) => {
+    // Fallbacks
+    const imageSrc = item.image || item.product?.image?.[0] || assets.parcel_icon;
+    const name = item.name || item.product?.name || "Unknown Product";
+    const size = item.size || "";
+    const quantity = item.quantity || 1;
+
+    return (
+      <div key={i} className="flex items-center gap-3">
+        <img
+          src={imageSrc}
+          alt={name}
+          className="w-10 h-10 rounded object-cover cursor-pointer transform transition-transform duration-300 hover:scale-125 hover:ring-2 hover:ring-orange-400"
+          onClick={() => setSelectedImage(imageSrc)}
+        />
+        <p>
+          <span className="font-medium">{name}</span> × {quantity}
+          {size && <span className="text-gray-500"> ({size})</span>}
+        </p>
+      </div>
+    );
+  })}
+</div>
+
+
 
             {/* Address */}
             <div className="text-sm text-gray-600 border-t pt-3">

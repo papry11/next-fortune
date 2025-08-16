@@ -6,7 +6,7 @@ import CartTotal from "../components/CartTotal";
 import { ShopContext } from "../context/ShopContext";
 
 const GuestCheckout = () => {
-  const { setCartItems: setContextCartItems } = useContext(ShopContext);
+  const { setCartItems: setContextCartItems, backendUrl } = useContext(ShopContext);
 
   const [formData, setFormData] = useState({
     fullName: "",
@@ -17,14 +17,55 @@ const GuestCheckout = () => {
   const [method, setMethod] = useState("cod");
   const [shippingCharge, setShippingCharge] = useState(0);
 
-  const [cartItems, setCartItems] = useState(
-    JSON.parse(localStorage.getItem("cart")) || []
-  );
+  // ✅ localStorage থেকে cartItems load করা
+  const [cartItems, setCartItems] = useState(() => {
+    const stored = JSON.parse(localStorage.getItem("cart")) || {};
+    return Object.entries(stored).flatMap(([productId, sizes]) =>
+      Object.entries(sizes).map(([size, quantity]) => ({
+        productId,
+        size,
+        quantity,
+        price: 0, // পরে backend থেকে আনব
+        name: "",
+        image: "",
+      }))
+    );
+  });
+
   const [total, setTotal] = useState(0);
 
+  // ✅ backend থেকে product details এনে price বসানো
+  useEffect(() => {
+    const fetchProducts = async () => {
+      try {
+        const updated = await Promise.all(
+          cartItems.map(async (item) => {
+            const res = await axios.get(`${backendUrl}/api/product/${item.productId}`);
+            const product = res.data;
+
+            return {
+              ...item,
+              price: product.price || 0,
+              name: product.name || "",
+              image: product.image?.[0] || "",
+            };
+          })
+        );
+        setCartItems(updated);
+      } catch (err) {
+        console.error("❌ Product fetch error:", err);
+      }
+    };
+
+    if (cartItems.length > 0) {
+      fetchProducts();
+    }
+  }, []);
+
+  // ✅ subtotal calculate
   useEffect(() => {
     const sum = cartItems.reduce(
-      (acc, item) => acc + item.price * item.quantity,
+      (acc, item) => acc + (item.price || 0) * item.quantity,
       0
     );
     setTotal(sum);
@@ -34,36 +75,50 @@ const GuestCheckout = () => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
+  // ✅ Order Submit
   const handleOrder = async (e) => {
     e.preventDefault();
     try {
-      const res = await axios.post(
-        "http://localhost:4000/api/order/place-guest",
-        {
-          fullName: formData.fullName,
-          phone: formData.phone,
-          fullAddress: formData.fullAddress,
-          items: cartItems,
-          amount: total + shippingCharge,
-        }
+      const subtotal = cartItems.reduce(
+        (acc, item) => acc + (item.price || 0) * item.quantity,
+        0
       );
+      const finalAmount = subtotal + shippingCharge;
 
-      // ✅ LocalStorage থেকে clear
+      console.log("📦 Sending Guest Order Payload 👉", {
+        fullName: formData.fullName,
+        phone: formData.phone,
+        fullAddress: formData.fullAddress,
+        items: cartItems,
+        amount: finalAmount,
+        paymentMethod: method,
+      });
+
+    const res = await axios.post(
+  `${backendUrl}/api/order/place-guest`,
+  {
+    fullName: formData.fullName,
+    phone: formData.phone,
+    fullAddress: formData.fullAddress,
+    items: cartItems,
+    amount: finalAmount,
+    deliveryCharge: shippingCharge, 
+    paymentMethod: method,
+  }
+);
+
+
+      // ✅ Clear cart after order
       localStorage.removeItem("cart");
-
-      // ✅ Local state থেকে clear
       setCartItems([]);
-
-      // ✅ Context থেকেও clear
       setContextCartItems({});
 
       alert(`✅ অর্ডার সম্পন্ন হয়েছে! Tracking ID: ${res.data.trackingId}`);
     } catch (err) {
-      console.error("Order Failed:", err);
+      console.error("❌ Order Failed:", err);
       alert("❌ অর্ডার ফেইল করেছে। আবার চেষ্টা করুন।");
     }
   };
-
 
   return (
     <form
@@ -128,6 +183,16 @@ const GuestCheckout = () => {
                   required
                   type="radio"
                   name="shipping"
+                  value="sub-dhaka"
+                  onChange={() => setShippingCharge(100)}
+                />
+                Sub Dhaka (৳100)
+              </label>
+              <label className="flex items-center gap-2">
+                <input
+                  required
+                  type="radio"
+                  name="shipping"
                   value="outside"
                   onChange={() => setShippingCharge(150)}
                 />
@@ -175,4 +240,3 @@ const GuestCheckout = () => {
 };
 
 export default GuestCheckout;
-

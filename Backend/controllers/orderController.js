@@ -5,124 +5,72 @@ import Product from "../models/productModels.js";
 import GuestUser from '../models/guestModel.js';
 import { v4 as uuidv4 } from "uuid";
 
-// ✅ Place Guest Order
-const placeGuestOrder = async (req, res) => {
-  try {
-    const { fullName, phone, fullAddress, items, amount } = req.body;
 
-    if (!fullName || !phone || !fullAddress || !items || !amount) {
+
+// ✅ Place Guest Order 
+const placeGuestOrder = async (req, res) => {
+
+  console.log("Guest Order Body:", req.body);
+  try {
+    const { fullName, phone, fullAddress, items } = req.body;
+    const deliveryCharge = req.body.shippingCharge || req.body.deliveryCharge || 0; // ✅ FIXED
+
+    if (!fullName || !phone || !fullAddress || !items) {
       return res.status(400).json({ success: false, message: "All fields are required" });
     }
 
-    // Calculate total
-    const totalProductPrice = items.reduce(
-      (sum, item) => sum + (item.price * item.quantity),
-      0
-    );
+    // 🛒 Step 1: Calculate product total (from DB)
+    let totalProductPrice = 0;
+    for (const item of items) {
+      const product = await Product.findById(item.productId).select("price");
+      if (product) {
+        totalProductPrice += product.price * (item.quantity || item.qty || 1);
+      }
+    }
 
-    const deliveryCharge = amount - totalProductPrice;
+    // 🛒 Step 2: Final amount (product + delivery)
     const finalAmount = totalProductPrice + deliveryCharge;
 
-    // Create Guest User
+    // 🛒 Step 3: Create guest user
     const guestUser = await GuestUser.create({ fullName, phone, fullAddress });
-
     const trackingId = uuidv4();
 
-    // ✅ Map items with product image also
+    // 🛒 Step 4: Map items with product details
     const orderItems = await Promise.all(
-  items.map(async (item) => {
-    const product = await Product.findById(item.productId).select("image name price");
+      items.map(async (item) => {
+        const product = await Product.findById(item.productId).select("image name price");
+        return {
+          product: item.productId,
+          name: product ? product.name : item.name,
+          price: product ? product.price : item.price,
+          quantity: item.quantity || item.qty || 1,
+          size: item.size,
+          image: product ? product.image : []
+        };
+      })
+    );
 
-    return {
-      product: item.productId,
-      name: product ? product.name : item.name,
-      price: product ? product.price : item.price,
-      quantity: item.quantity,
-      size: item.size,
-      image: product ? product.image[0] : null   // ✅ ensure image saved
-    };
-  })
-);
-
-    // Create Order
+    // 🛒 Step 5: Save order
     const order = await Order.create({
       user: guestUser._id,
       userType: "GuestUser",
       items: orderItems,
-      address: {
-        fullName,
-        phone,
-        fullAddress,
-      },
-      amount: finalAmount,
+      address: { fullName, phone, fullAddress },
+      amount: finalAmount, // ✅ product + delivery
       trackingId,
       paymentMethod: "COD",
       payment: false,
+      status: "Pending",
     });
 
-    
+    res.status(201).json({ success: true, trackingId, order });
 
-    res.status(201).json({ success: true, trackingId });
   } catch (error) {
     console.error("Guest Order Error:", error.message);
     res.status(500).json({ success: false, message: "Server Error" });
   }
 };
 
-
-
-//✅ Place Guest Order
-// const placeGuestOrder = async (req, res) => {
-//   try {
-//     const { fullName, phone, fullAddress, items, amount } = req.body;
-
-//     if (!fullName || !phone || !fullAddress || !items || !amount) {
-//       return res.status(400).json({ success: false, message: "All fields are required" });
-//     }
-
-//     // Calculate total
-//     const totalProductPrice = items.reduce(
-//       (sum, item) => sum + (item.price * item.quantity),
-//       0
-//     );
-
-//     const deliveryCharge = amount - totalProductPrice;
-//     const finalAmount = totalProductPrice + deliveryCharge;
-
-//     // Create Guest User
-//     const guestUser = await GuestUser.create({ fullName, phone, fullAddress });
-
-//     const trackingId = uuidv4();
-
-//     // ✅ Map items to include ObjectId & size
-//     const orderItems = items.map(item => ({
-//       product: item.productId,
-//       name: item.name,
-//       price: item.price,
-//       quantity: item.quantity,
-//       size: item.size
-//     }));
-
-//     // Create Order
-//     const order = await Order.create({
-//       user: guestUser._id,
-//       userType: "GuestUser",
-//       items: orderItems,
-//       address: {
-//         fullName,
-//         phone,
-//         fullAddress
-//       },
-//       amount: finalAmount,
-//       trackingId
-//     });
-
-//     res.status(201).json({ success: true, trackingId });
-//   } catch (error) {
-//     console.error("Guest Order Error:", error.message);
-//     res.status(500).json({ success: false, message: "Server Error" });
-//   }
-// };
 
 // ✅ Track Guest Order
 const trackOrder = async (req, res) => {
@@ -185,6 +133,9 @@ const placeOrder = async (req, res) => {
     res.status(500).json({ success: false, message: "Server Error", error: error.message });
   }
 };
+
+
+
 
 // ✅ Get all orders (Admin)
 const allOrders = async (req, res) => {
