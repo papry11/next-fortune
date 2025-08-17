@@ -50,7 +50,7 @@ const Navbar = () => {
         <FontAwesomeIcon onClick={() => setShowSearch(true)} className="text-xl cursor-pointer" icon={faMagnifyingGlass} />
 
         {/* Profile */}
-        <div className="relative group">
+        {/* <div className="relative group">
           {!token ? (
             <Link to='/login'>
               <FontAwesomeIcon className="text-xl cursor-pointer" icon={faUser} />
@@ -68,7 +68,7 @@ const Navbar = () => {
               </div>
             </div>
           )}
-        </div>
+        </div> */}
 
         {/* Cart */}
         <Link to='/cart' className="relative">

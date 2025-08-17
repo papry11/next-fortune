@@ -1,8 +1,7 @@
-
-import React, { useContext, useState, useEffect } from 'react';
-import { ShopContext } from '../context/ShopContext';
-import Title from '../components/Title';
-import axios from 'axios';
+import React, { useContext, useState, useEffect } from "react";
+import { ShopContext } from "../context/ShopContext";
+import Title from "../components/Title";
+import axios from "axios";
 
 const Orders = () => {
   const { backendUrl, token, currency } = useContext(ShopContext);
@@ -13,7 +12,7 @@ const Orders = () => {
       if (!token) return;
 
       const response = await axios.post(
-        backendUrl + '/api/order/userorders',
+        backendUrl + "/api/order/userorders",
         {},
         { headers: { token } }
       );
@@ -48,7 +47,7 @@ const Orders = () => {
   return (
     <div className="border-t border-gray-300 pt-16">
       <div className="text-2xl">
-        <Title text1={'MY'} text2={'ORDERS'} />
+        <Title text1={"MY"} text2={"ORDERS"} />
       </div>
 
       <div>
@@ -59,21 +58,28 @@ const Orders = () => {
           >
             <div className="flex items-start gap-6 text-sm">
               <img
-                className="w-16 sm:w-20"
-                src={Array.isArray(item.image) ? item.image[0] : item.image}
-                alt={item.name}
-              />
+  src={item.image}
+  alt={item.name}
+  style={{ width: "60px", height: "60px", objectFit: "cover" }}
+/>
+
+
               <div>
                 <p className="sm:text-base font-medium">{item.name}</p>
                 <div className="flex items-center gap-3 text-base text-gray-300">
-                  <p>{currency}{item.price}</p>
+                  <p>
+                    {currency}
+                    {item.price}
+                  </p>
                   <p>Quantity : {item.quantity}</p>
                   <p>Size : {item.size}</p>
                 </div>
                 <p className="mt-2">
                   Date :
                   <span className="text-gray-400 ml-1">
-                    {item.date ? new Date(item.date).toLocaleDateString('en-GB') : 'N/A'}
+                    {item.date
+                      ? new Date(item.date).toLocaleDateString("en-GB")
+                      : "N/A"}
                   </span>
                 </p>
                 <p className="mt-2">
@@ -89,7 +95,9 @@ const Orders = () => {
               <div className="flex items-center gap-2">
                 <p
                   className={`min-w-2 h-2 rounded-full ${
-                    item.status === 'Order Placed' ? 'bg-green-500' : 'bg-yellow-500'
+                    item.status === "Order Placed"
+                      ? "bg-green-500"
+                      : "bg-yellow-500"
                   }`}
                 ></p>
                 <p className="text-sm md:text-base">{item.status}</p>
@@ -109,4 +117,3 @@ const Orders = () => {
 };
 
 export default Orders;
-
